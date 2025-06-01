@@ -24,7 +24,6 @@ where price between 20 and 100;
 
 # 5. Напишіть SQL команду, за допомогою якої можна знайти кількість продуктів (рядків) та 
 # середню ціну (price) у кожного постачальника (supplier_id)
-select * from products order by supplier_id;
 select
 	supplier_id,
     count(*) as products_per_supplier,
