@@ -1,7 +1,7 @@
 create database if not exists pandemic;
 use pandemic;
 
-create table infectious_cases_raw (
+create table infectious_cases (
     entity varchar(255),
     code varchar(10),
     year int,
@@ -15,7 +15,31 @@ create table infectious_cases_raw (
     number_smallpox float,
     number_cholera_cases float
 );
-select COUNT(*) from infectious_cases_raw;
+
+# Load data into table
+load data infile 'infectious_cases.csv'
+into table infectious_cases
+fields terminated by ',' 
+enclosed by '"' 
+lines terminated by '\n'
+IGNORE 1 ROWS
+(
+  entity, code, year,
+  @number_yaws, @polio_cases, @cases_guinea_worm,
+  @number_rabies, @number_malaria, @number_hiv,
+  @number_tuberculosis, @number_smallpox, @number_cholera_cases
+)
+set
+  number_yaws = NULLIF(@number_yaws, ''),
+  polio_cases = NULLIF(@polio_cases, ''),
+  cases_guinea_worm = NULLIF(@cases_guinea_worm, ''),
+  number_rabies = NULLIF(@number_rabies, ''),
+  number_malaria = NULLIF(@number_malaria, ''),
+  number_hiv = NULLIF(@number_hiv, ''),
+  number_tuberculosis = NULLIF(@number_tuberculosis, ''),
+  number_smallpox = NULLIF(@number_smallpox, ''),
+  number_cholera_cases = NULLIF(@number_cholera_cases, '');
+select COUNT(*) from infectious_cases;
 
 create table locations (
 	id 		int auto_increment primary key,
@@ -26,9 +50,9 @@ create table locations (
 # Populate (Entity, Code) tuple into normalized table
 insert into locations (entity, code)
 select distinct Entity, Code
-from infectious_cases_raw;
+from infectious_cases;
 
-create table pandemic.cases (
+create table cases (
 	id int auto_increment primary key,
     location_id int,
     year int not null,
@@ -70,6 +94,6 @@ select
     r.number_smallpox,
     r.number_cholera_cases
 from 
-    infectious_cases_raw r
+    infectious_cases r
 join
     locations l on r.Entity = l.entity and r.Code <=> l.code;
